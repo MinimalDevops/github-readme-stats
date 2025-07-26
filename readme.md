@@ -756,6 +756,111 @@ By default, GitHub does not lay out the cards side by side. To do that, you can 
 
 </details>
 
+# Custom Database Integration
+
+This fork includes **custom database integration** for displaying additional repository traffic statistics from your Supabase PostgreSQL database.
+
+## Features
+
+- **Total Views** - Shows total repository views from your database
+- **Total Clones** - Shows total repository clones from your database  
+- **Configurable Repositories** - Specify which repositories to track via YAML
+- **Real-time Data** - Live stats that update automatically
+- **Graceful Fallback** - Works even if database is unavailable
+
+## Setup
+
+### 1. Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# GitHub API Token
+PAT_1=your_github_personal_access_token
+
+# Supabase Database Configuration
+SUPABASE_HOST=your-supabase-host
+SUPABASE_DB=your-database-name
+SUPABASE_USER=your-username
+SUPABASE_PASSWORD=your-password
+SUPABASE_PORT=5432
+SUPABASE_SSL=true
+
+# Repository Configuration (optional)
+REPOS_YAML_PATH=/path/to/your/repos.yaml
+```
+
+### 2. Repository Configuration
+
+Create a `repos.yaml` file (or specify custom path via `REPOS_YAML_PATH`):
+
+```yaml
+repos:
+  - owner: "your-username"
+    repo: "repository-name"
+  - owner: "your-username"
+    repo: "another-repo"
+```
+
+### 3. Database Schema
+
+Ensure your Supabase database has a `github_traffic` table with:
+
+```sql
+CREATE TABLE github_traffic (
+  id SERIAL PRIMARY KEY,
+  repo_name TEXT NOT NULL,
+  total_views INTEGER DEFAULT 0,
+  total_clones INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## Usage
+
+The database stats will automatically appear in your GitHub stats card:
+
+```md
+![Your GitHub stats](http://localhost:9000/?username=your-username)
+```
+
+**Additional stats displayed:**
+- Total Views (from database)
+- Total Clones (from database)
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start the server
+node express.js
+
+# Visit your stats card
+open http://localhost:9000/?username=your-username
+
+# Check server health
+curl http://localhost:9000/health
+```
+
+## Rate Limiting
+
+The API includes rate limiting to prevent abuse and protect GitHub API quotas:
+
+- **Limit**: 10 requests per minute per IP address
+- **Window**: 1 minute sliding window
+- **Headers**: Rate limit information included in response headers
+- **Health Check**: `/health` endpoint available for monitoring (not rate limited)
+
+When rate limit is exceeded, the API returns:
+```json
+{
+  "error": "Too many requests from this IP, please try again later.",
+  "retryAfter": "60 seconds"
+}
+```
+
 # Deploy on your own
 
 ## On Vercel
@@ -808,8 +913,136 @@ Since the GitHub API only allows 5k requests per hour, my `https://github-readme
 3.  Run `npm i` if needed (initial setup)
 4.  Run `node express.js` to start the server, or set the entry point to `express.js` in `package.json` if you're deploying on a managed service
     <https://github.com/anuraghazra/github-readme-stats/blob/ba7c2f8b55eac8452e479c8bd38b044d204d0424/package.json#L11>
-5.  You're done 🎉
+5.  You're done ��
     </details>
+
+## With PM2 (Production Deployment)
+
+For production deployment with process management, monitoring, and auto-restart capabilities:
+
+### 1. Install PM2
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Or install locally
+npm install --save-dev pm2
+```
+
+### 2. Create PM2 Configuration
+
+Create `ecosystem.config.cjs` in your project root:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'github-readme-stats',
+    script: 'express.js',
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'production',
+      port: 9000
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      port: 9000
+    }
+  }]
+};
+```
+
+### 3. Start with PM2
+
+```bash
+# Start the application
+pm2 start ecosystem.config.cjs
+
+# Or start directly
+pm2 start express.js --name "github-readme-stats"
+
+# Start in production mode
+pm2 start ecosystem.config.cjs --env production
+```
+
+### 4. PM2 Management Commands
+
+```bash
+# View running processes
+pm2 list
+
+# Monitor processes
+pm2 monit
+
+# View logs
+pm2 logs github-readme-stats
+
+# Restart application
+pm2 restart github-readme-stats
+
+# Stop application
+pm2 stop github-readme-stats
+
+# Delete application from PM2
+pm2 delete github-readme-stats
+
+# Save PM2 configuration
+pm2 save
+
+# Setup PM2 to start on system boot
+pm2 startup
+```
+
+### 5. Environment Variables with PM2
+
+You can set environment variables in the ecosystem config:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'github-readme-stats',
+    script: 'express.js',
+    env: {
+      NODE_ENV: 'production',
+      port: 9000,
+      PAT_1: 'your-github-token',
+      SUPABASE_HOST: 'your-supabase-host',
+      SUPABASE_DB: 'your-database-name',
+      SUPABASE_USER: 'your-username',
+      SUPABASE_PASSWORD: 'your-password',
+      SUPABASE_PORT: 5432,
+      SUPABASE_SSL: 'true',
+      REPOS_YAML_PATH: '/path/to/repos.yaml'
+    }
+  }]
+};
+```
+
+### 6. Reverse Proxy Setup (Optional)
+
+For production, you might want to use Nginx as a reverse proxy:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
 
 ## Disable rate limit protections
 

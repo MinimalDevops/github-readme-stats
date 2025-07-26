@@ -14,3 +14,7 @@ vercel_token
 *.code-workspace
 
 .vercel
+
+# PM2 logs
+logs/
+*.log
