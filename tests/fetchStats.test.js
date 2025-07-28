@@ -128,6 +128,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -164,6 +167,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -206,6 +212,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -255,6 +264,9 @@ describe("Test fetchStats", () => {
       totalStars: 200,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -286,6 +298,9 @@ describe("Test fetchStats", () => {
       totalStars: 400,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -317,6 +332,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -348,6 +366,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -377,6 +398,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 0,
       totalDiscussionsAnswered: 0,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });
@@ -406,6 +430,9 @@ describe("Test fetchStats", () => {
       totalStars: 300,
       totalDiscussionsStarted: 10,
       totalDiscussionsAnswered: 40,
+      totalViews: 0,
+      totalClones: 0,
+      reposTracked: 0,
       rank,
     });
   });

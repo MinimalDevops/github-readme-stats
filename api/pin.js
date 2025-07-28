@@ -56,19 +56,26 @@ export default async (req, res) => {
   try {
     const repoData = await fetchRepo(username, repo);
 
-    let cacheSeconds = clampValue(
-      parseInt(cache_seconds || CONSTANTS.PIN_CARD_CACHE_SECONDS, 10),
-      CONSTANTS.ONE_DAY,
-      CONSTANTS.TEN_DAY,
-    );
-    cacheSeconds = process.env.CACHE_SECONDS
-      ? parseInt(process.env.CACHE_SECONDS, 10) || cacheSeconds
-      : cacheSeconds;
+    // Handle cache=clear parameter
+    if (req.query.cache === "clear") {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    } else {
+      let cacheSeconds = clampValue(
+        parseInt(cache_seconds || CONSTANTS.PIN_CARD_CACHE_SECONDS, 10),
+        CONSTANTS.ONE_DAY,
+        CONSTANTS.TEN_DAY,
+      );
+      cacheSeconds = process.env.CACHE_SECONDS
+        ? parseInt(process.env.CACHE_SECONDS, 10) || cacheSeconds
+        : cacheSeconds;
 
-    res.setHeader(
-      "Cache-Control",
-      `max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`,
-    );
+      res.setHeader(
+        "Cache-Control",
+        `max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`,
+      );
+    }
 
     return res.send(
       renderRepoCard(repoData, {

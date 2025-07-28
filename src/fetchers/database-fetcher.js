@@ -1,6 +1,6 @@
 // @ts-check
 import * as dotenv from "dotenv";
-import { CustomError, logger, MissingParamError } from "../common/utils.js";
+import { CustomError, logger } from "../common/utils.js";
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ const getDatabaseConnection = async () => {
       database: process.env.SUPABASE_DB,
       user: process.env.SUPABASE_USER,
       password: process.env.SUPABASE_PASSWORD,
-      port: parseInt(process.env.SUPABASE_PORT || "5432"),
+      port: parseInt(process.env.SUPABASE_PORT || "5432", 10),
       ssl:
         process.env.SUPABASE_SSL === "true"
           ? { rejectUnauthorized: false }
@@ -25,7 +25,7 @@ const getDatabaseConnection = async () => {
     });
 
     return client;
-  } catch (error) {
+  } catch {
     throw new CustomError(
       "PostgreSQL client not available. Install with: npm install pg",
       "DATABASE_ERROR",
@@ -41,7 +41,6 @@ const loadReposFromYaml = async () => {
   try {
     const yaml = await import("js-yaml");
     const fs = await import("fs");
-    const path = await import("path");
 
     // Get repos.yaml path from environment variable or use default
     const reposYamlPath = process.env.REPOS_YAML_PATH || "repos.yaml";
@@ -67,10 +66,9 @@ const loadReposFromYaml = async () => {
 
 /**
  * Fetch GitHub traffic stats from Supabase database
- * @param {string} [username] GitHub username (optional, for filtering)
  * @returns {Promise<{totalViews: number, totalClones: number, reposTracked: number}>} Traffic stats
  */
-const fetchDatabaseStats = async (username) => {
+const fetchDatabaseStats = async () => {
   try {
     // Load repos from YAML
     const repos = await loadReposFromYaml();
@@ -105,9 +103,9 @@ const fetchDatabaseStats = async (username) => {
       const row = result.rows[0];
 
       return {
-        totalViews: parseInt(row.total_views) || 0,
-        totalClones: parseInt(row.total_clones) || 0,
-        reposTracked: parseInt(row.repos_tracked) || 0,
+        totalViews: parseInt(row.total_views, 10) || 0,
+        totalClones: parseInt(row.total_clones, 10) || 0,
+        reposTracked: parseInt(row.repos_tracked, 10) || 0,
       };
     } finally {
       await client.end();

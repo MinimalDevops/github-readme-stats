@@ -298,6 +298,7 @@ You can customize the appearance of all your cards however you wish with URL par
 | `hide_border` | Hides the card's border. | boolean | `false` |
 | `theme` | Name of the theme, choose from [all available themes](themes/README.md). | enum | `default` |
 | `cache_seconds` | Sets the cache header manually (min: 21600, max: 86400). | integer | `21600` |
+| `cache` | Set to `clear` to bypass cache and get fresh data. | string | `null` |
 | `locale` | Sets the language in the card, you can check full list of available locales [here](#available-locales). | enum | `en` |
 | `border_radius` | Corner rounding on the card. | number | `4.5` |
 
@@ -1044,11 +1045,35 @@ server {
 }
 ```
 
+## Cache Control
+
+GitHub Readme Stats supports cache control to optimize performance and data freshness:
+
+### Cache Parameters
+
+- **`cache_seconds`**: Sets the cache header manually (min: 21600, max: 86400). Default is 21600 seconds (6 hours).
+- **`cache=clear`**: Bypasses cache completely and fetches fresh data. Useful when you need immediate updates.
+
+### Examples
+
+```bash
+# Normal request with default cache (6 hours)
+https://github-readme-stats.vercel.app/api?username=anuraghazra
+
+# Request with custom cache duration (12 hours)
+https://github-readme-stats.vercel.app/api?username=anuraghazra&cache_seconds=43200
+
+# Request with cache bypass (fresh data)
+https://github-readme-stats.vercel.app/api?username=anuraghazra&cache=clear
+```
+
+### Environment Variables
+
+*   `CACHE_SECONDS`: This environment variable takes precedence over our cache minimum and maximum values and can circumvent these values for self-hosted Vercel instances.
+
 ## Disable rate limit protections
 
 Github Readme Stats contains several Vercel environment variables that can be used to remove the rate limit protections:
-
-*   `CACHE_SECONDS`: This environment variable takes precedence over our cache minimum and maximum values and can circumvent these values for self-hosted Vercel instances.
 
 See [the Vercel documentation](https://vercel.com/docs/concepts/projects/environment-variables) on adding these environment variables to your Vercel instance.
 
