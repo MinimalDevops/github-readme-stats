@@ -20,11 +20,25 @@ const validateRepoNames = (repoNames) => {
 };
 
 /**
- * GitHub Traffic Query Template
+ * GitHub Traffic Query Template (Total Sum - No Filtering)
+ * @returns {string} - SQL query
+ */
+const getGitHubTrafficQuery = () => {
+  return `
+    SELECT
+      SUM(total_views) AS total_views,
+      SUM(total_clones) AS total_clones,
+      COUNT(DISTINCT repo_name) AS repos_tracked
+    FROM github_traffic
+  `;
+};
+
+/**
+ * GitHub Traffic Query Template (Filtered by Repositories)
  * @param {string[]} repoNames - Validated repository names
  * @returns {string} - SQL query
  */
-const getGitHubTrafficQuery = (repoNames) => {
+const getGitHubTrafficFilteredQuery = (repoNames) => {
   if (!validateRepoNames(repoNames)) {
     throw new Error("Invalid repository names provided");
   }
@@ -57,15 +71,20 @@ const getMediumMetricsQuery = () => {
 /**
  * Get query from environment or use template
  * @param {string} queryType - Type of query ('github_traffic' or 'medium_metrics')
- * @param {string[]} [repoNames] - Repository names (for github_traffic)
+ * @param {string[]} [repoNames] - Repository names (optional, for filtered queries)
  * @returns {string} - SQL query
  */
 const getQuery = (queryType, repoNames = []) => {
   switch (queryType) {
     case "github_traffic":
-      return (
-        process.env.GITHUB_TRAFFIC_QUERY || getGitHubTrafficQuery(repoNames)
-      );
+      // Use environment variable if provided, otherwise use unfiltered query
+      if (process.env.GITHUB_TRAFFIC_QUERY) {
+        return process.env.GITHUB_TRAFFIC_QUERY;
+      }
+      // If repoNames provided, use filtered query, otherwise use unfiltered
+      return repoNames.length > 0
+        ? getGitHubTrafficFilteredQuery(repoNames)
+        : getGitHubTrafficQuery();
     case "medium_metrics":
       return process.env.MEDIUM_METRICS_QUERY || getMediumMetricsQuery();
     default:

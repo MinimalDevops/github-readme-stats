@@ -800,9 +800,9 @@ This fork includes **custom database integration** for displaying additional rep
 
 ## Features
 
-- **Total Views** - Shows total repository views from your database
-- **Total Clones** - Shows total repository clones from your database  
-- **Configurable Repositories** - Specify which repositories to track via YAML
+- **Total Views** - Shows total repository views from your database (sum of all repositories)
+- **Total Clones** - Shows total repository clones from your database (sum of all repositories)
+- **Repository Count** - Shows total number of repositories tracked
 - **Real-time Data** - Live stats that update automatically
 - **Graceful Fallback** - Works even if database is unavailable
 - **Medium Stats Card** - Dedicated card for Medium platform statistics
@@ -825,18 +825,23 @@ SUPABASE_PASSWORD=your-password
 SUPABASE_PORT=5432
 SUPABASE_SSL=true
 
-# Repository Configuration (optional)
+# Repository Configuration (optional - only needed for filtering)
 REPOS_YAML_PATH=/path/to/your/repos.yaml
 
 # Database Queries (optional - for security customization)
-# These override the default secure query templates
-GITHUB_TRAFFIC_QUERY="SELECT SUM(total_views) AS total_views, SUM(total_clones) AS total_clones, COUNT(DISTINCT repo_name) AS repos_tracked FROM github_traffic WHERE repo_name = ANY($1::text[])"
+# Default behavior: sums all repositories in the database
+GITHUB_TRAFFIC_QUERY="SELECT SUM(total_views) AS total_views, SUM(total_clones) AS total_clones, COUNT(DISTINCT repo_name) AS repos_tracked FROM github_traffic"
 MEDIUM_METRICS_QUERY="SELECT total_views, total_reads FROM medium_metrics ORDER BY timestamp DESC LIMIT 1"
 ```
 
-### 2. Repository Configuration
+### 2. Repository Configuration (Optional)
 
-Create a `repos.yaml` file (or specify custom path via `REPOS_YAML_PATH`):
+**Default Behavior**: The application will sum all views and clones from all repositories in your database.
+
+**Custom Filtering**: If you want to filter specific repositories, you can:
+
+1. **Use Environment Variable**: Set a custom query in `GITHUB_TRAFFIC_QUERY`
+2. **Create repos.yaml**: Specify which repositories to include
 
 ```yaml
 repos:
