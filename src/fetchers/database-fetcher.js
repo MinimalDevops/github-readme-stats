@@ -1,6 +1,7 @@
 // @ts-check
 import * as dotenv from "dotenv";
 import { CustomError, logger } from "../common/utils.js";
+import { getQuery } from "./query-templates.js";
 
 dotenv.config();
 
@@ -84,15 +85,8 @@ const fetchDatabaseStats = async () => {
 
     const repoNames = repos.map((r) => `${r.owner}/${r.repo}`);
 
-    // Build query
-    const query = `
-      SELECT
-        SUM(total_views) AS total_views,
-        SUM(total_clones) AS total_clones,
-        COUNT(DISTINCT repo_name) AS repos_tracked
-      FROM github_traffic
-      WHERE repo_name = ANY($1::text[])
-    `;
+    // Get secure query from templates
+    const query = getQuery("github_traffic", repoNames);
 
     // Execute query
     const client = await getDatabaseConnection();

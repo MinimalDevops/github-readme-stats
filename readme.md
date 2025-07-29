@@ -437,6 +437,18 @@ If we don't support your language, please consider contributing! You can find mo
 | `display_format` | Sets the WakaTime stats display format. Choose `time` to display time-based stats or `percent` to show percentages. | enum | `time` |
 | `disable_animations` | Disables all animations in the card. | boolean | `false` |
 
+#### Medium Stats Card Exclusive Options
+
+| Name | Description | Type | Default value |
+| --- | --- | --- | --- |
+| `hide_title` | Hides the title of your card. | boolean | `false` |
+| `line_height` | Sets the line height between text. | integer | `25` |
+| `custom_title` | Sets a custom title for the card. | string | `Minimal Devops' Medium Stats` |
+| `show_icons` | Shows icons near all stats. | boolean | `false` |
+| `text_bold` | Uses bold text. | boolean | `true` |
+| `disable_animations` | Disables all animations in the card. | boolean | `false` |
+| `number_format` | Switches between two available formats for displaying the card values `short` (i.e. `6.6k`) and `long` (i.e. `6626`). | enum | `short` |
+
 ***
 
 # GitHub Extra Pins
@@ -484,6 +496,27 @@ Endpoint: `api/gist?id=bbfce31e0217a3689c8d961a356cb10d`
 Use [show\_owner](#gist-card-exclusive-options) query option to include the gist's owner username
 
 ![Gist Card](https://github-readme-stats.vercel.app/api/gist?id=bbfce31e0217a3689c8d961a356cb10d\&show_owner=true)
+
+# Medium Stats Card
+
+The Medium Stats card shows your Medium platform statistics including total views and total reads from your Supabase database.
+
+> [!NOTE]\
+> This card requires a Supabase database with a `medium_metrics` table containing `total_views` and `total_reads` columns.
+
+### Usage
+
+Copy-paste this code into your readme and change the links.
+
+Endpoint: `api/medium`
+
+```md
+[![Medium Stats](http://localhost:9000/medium)](https://medium.com/@your-username)
+```
+
+### Demo
+
+![Medium Stats](http://localhost:9000/medium?theme=dark)
 
 # Top Languages Card
 
@@ -712,6 +745,10 @@ Choose from any of the [default themes](#themes)
 
 ![Harlok's WakaTime stats](https://github-readme-stats.vercel.app/api/wakatime?username=ffflabs)
 
+*   Medium Stats card
+
+![Minimal Devops' Medium Stats](http://localhost:9000/medium?theme=dark)
+
 ***
 
 ## Quick Tip (Align The Cards)
@@ -768,6 +805,7 @@ This fork includes **custom database integration** for displaying additional rep
 - **Configurable Repositories** - Specify which repositories to track via YAML
 - **Real-time Data** - Live stats that update automatically
 - **Graceful Fallback** - Works even if database is unavailable
+- **Medium Stats Card** - Dedicated card for Medium platform statistics
 
 ## Setup
 
@@ -789,6 +827,11 @@ SUPABASE_SSL=true
 
 # Repository Configuration (optional)
 REPOS_YAML_PATH=/path/to/your/repos.yaml
+
+# Database Queries (optional - for security customization)
+# These override the default secure query templates
+GITHUB_TRAFFIC_QUERY="SELECT SUM(total_views) AS total_views, SUM(total_clones) AS total_clones, COUNT(DISTINCT repo_name) AS repos_tracked FROM github_traffic WHERE repo_name = ANY($1::text[])"
+MEDIUM_METRICS_QUERY="SELECT total_views, total_reads FROM medium_metrics ORDER BY timestamp DESC LIMIT 1"
 ```
 
 ### 2. Repository Configuration
@@ -805,8 +848,9 @@ repos:
 
 ### 3. Database Schema
 
-Ensure your Supabase database has a `github_traffic` table with:
+Ensure your Supabase database has the required tables:
 
+**GitHub Traffic Table:**
 ```sql
 CREATE TABLE github_traffic (
   id SERIAL PRIMARY KEY,
@@ -814,6 +858,17 @@ CREATE TABLE github_traffic (
   total_views INTEGER DEFAULT 0,
   total_clones INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**Medium Metrics Table:**
+```sql
+CREATE TABLE medium_metrics (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMPTZ DEFAULT NOW(),
+  total_views INTEGER DEFAULT 0,
+  total_reads INTEGER DEFAULT 0,
+  total_earning NUMERIC DEFAULT 0
 );
 ```
 
@@ -828,6 +883,36 @@ The database stats will automatically appear in your GitHub stats card:
 **Additional stats displayed:**
 - Total Views (from database)
 - Total Clones (from database)
+
+### Medium Stats Card
+
+Access your Medium statistics with a dedicated card:
+
+```md
+![Medium Stats](http://localhost:9000/medium)
+```
+
+**Stats displayed:**
+- Total Views (from Medium)
+- Total Reads (from Medium)
+
+## Security Features
+
+### 🔒 Query Security
+
+The application implements multiple security layers for database queries:
+
+1. **Parameterized Queries**: All queries use PostgreSQL parameterized queries to prevent SQL injection
+2. **Input Validation**: Repository names are validated against a strict pattern (`owner/repo` format)
+3. **Query Templates**: Default secure query templates with built-in validation
+4. **Environment Override**: Custom queries can be provided via environment variables for advanced use cases
+
+### 🛡️ Security Best Practices
+
+- **Repository Validation**: Only allows valid GitHub repository names (alphanumeric, dots, underscores, hyphens)
+- **Query Isolation**: Each query type has its own template and validation
+- **Error Handling**: Graceful error handling without exposing sensitive information
+- **Environment Variables**: Sensitive data stored in environment variables, not in code
 
 ## Local Development
 

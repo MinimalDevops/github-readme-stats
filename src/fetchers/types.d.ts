@@ -43,6 +43,11 @@ export type StatsData = {
   reposTracked?: number;
 };
 
+export type MediumData = {
+  totalViews: number;
+  totalReads: number;
+};
+
 export type Lang = {
   name: string;
   color: string;
