@@ -11,6 +11,7 @@ import {
   request,
   wrapTextMultiline,
 } from "../common/utils.js";
+import { fetchDatabaseStats } from "./database-fetcher.js";
 
 dotenv.config();
 
@@ -244,6 +245,10 @@ const fetchStats = async (
     totalDiscussionsAnswered: 0,
     contributedTo: 0,
     rank: { level: "C", percentile: 100 },
+    // Database stats
+    totalViews: 0,
+    totalClones: 0,
+    reposTracked: 0,
   };
 
   let res = await statsFetcher({
@@ -324,6 +329,17 @@ const fetchStats = async (
     stars: stats.totalStars,
     followers: user.followers.totalCount,
   });
+
+  // Fetch database stats (traffic data)
+  try {
+    const dbStats = await fetchDatabaseStats(username);
+    stats.totalViews = dbStats.totalViews;
+    stats.totalClones = dbStats.totalClones;
+    stats.reposTracked = dbStats.reposTracked;
+  } catch (error) {
+    logger.log("Could not fetch database stats:", error.message);
+    // Keep default values (0) if database fetch fails
+  }
 
   return stats;
 };

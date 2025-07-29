@@ -30,6 +30,17 @@ export type StatCardOptions = CommonOptions & {
   show: string[];
 };
 
+export type MediumCardOptions = CommonOptions & {
+  show_icons: boolean;
+  hide_title: boolean;
+  card_width: number;
+  line_height: number | string;
+  custom_title: string;
+  disable_animations: boolean;
+  number_format: string;
+  text_bold: boolean;
+};
+
 export type RepoCardOptions = CommonOptions & {
   show_owner: boolean;
   description_lines_count: number;

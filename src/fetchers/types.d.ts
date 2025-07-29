@@ -37,6 +37,15 @@ export type StatsData = {
   totalDiscussionsAnswered: number;
   contributedTo: number;
   rank: { level: string; percentile: number };
+  // Database stats
+  totalViews?: number;
+  totalClones?: number;
+  reposTracked?: number;
+};
+
+export type MediumData = {
+  totalViews: number;
+  totalReads: number;
 };
 
 export type Lang = {

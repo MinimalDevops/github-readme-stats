@@ -298,6 +298,7 @@ You can customize the appearance of all your cards however you wish with URL par
 | `hide_border` | Hides the card's border. | boolean | `false` |
 | `theme` | Name of the theme, choose from [all available themes](themes/README.md). | enum | `default` |
 | `cache_seconds` | Sets the cache header manually (min: 21600, max: 86400). | integer | `21600` |
+| `cache` | Set to `clear` to bypass cache and get fresh data. | string | `null` |
 | `locale` | Sets the language in the card, you can check full list of available locales [here](#available-locales). | enum | `en` |
 | `border_radius` | Corner rounding on the card. | number | `4.5` |
 
@@ -436,6 +437,18 @@ If we don't support your language, please consider contributing! You can find mo
 | `display_format` | Sets the WakaTime stats display format. Choose `time` to display time-based stats or `percent` to show percentages. | enum | `time` |
 | `disable_animations` | Disables all animations in the card. | boolean | `false` |
 
+#### Medium Stats Card Exclusive Options
+
+| Name | Description | Type | Default value |
+| --- | --- | --- | --- |
+| `hide_title` | Hides the title of your card. | boolean | `false` |
+| `line_height` | Sets the line height between text. | integer | `25` |
+| `custom_title` | Sets a custom title for the card. | string | `Minimal Devops' Medium Stats` |
+| `show_icons` | Shows icons near all stats. | boolean | `false` |
+| `text_bold` | Uses bold text. | boolean | `true` |
+| `disable_animations` | Disables all animations in the card. | boolean | `false` |
+| `number_format` | Switches between two available formats for displaying the card values `short` (i.e. `6.6k`) and `long` (i.e. `6626`). | enum | `short` |
+
 ***
 
 # GitHub Extra Pins
@@ -483,6 +496,27 @@ Endpoint: `api/gist?id=bbfce31e0217a3689c8d961a356cb10d`
 Use [show\_owner](#gist-card-exclusive-options) query option to include the gist's owner username
 
 ![Gist Card](https://github-readme-stats.vercel.app/api/gist?id=bbfce31e0217a3689c8d961a356cb10d\&show_owner=true)
+
+# Medium Stats Card
+
+The Medium Stats card shows your Medium platform statistics including total views and total reads from your Supabase database.
+
+> [!NOTE]\
+> This card requires a Supabase database with a `medium_metrics` table containing `total_views` and `total_reads` columns.
+
+### Usage
+
+Copy-paste this code into your readme and change the links.
+
+Endpoint: `api/medium`
+
+```md
+[![Medium Stats](http://localhost:9000/medium)](https://medium.com/@your-username)
+```
+
+### Demo
+
+![Medium Stats](http://localhost:9000/medium?theme=dark)
 
 # Top Languages Card
 
@@ -711,6 +745,10 @@ Choose from any of the [default themes](#themes)
 
 ![Harlok's WakaTime stats](https://github-readme-stats.vercel.app/api/wakatime?username=ffflabs)
 
+*   Medium Stats card
+
+![Minimal Devops' Medium Stats](http://localhost:9000/medium?theme=dark)
+
 ***
 
 ## Quick Tip (Align The Cards)
@@ -755,6 +793,164 @@ By default, GitHub does not lay out the cards side by side. To do that, you can 
 </a>
 
 </details>
+
+# Custom Database Integration
+
+This fork includes **custom database integration** for displaying additional repository traffic statistics from your Supabase PostgreSQL database.
+
+## Features
+
+- **Total Views** - Shows total repository views from your database (sum of all repositories)
+- **Total Clones** - Shows total repository clones from your database (sum of all repositories)
+- **Repository Count** - Shows total number of repositories tracked
+- **Real-time Data** - Live stats that update automatically
+- **Graceful Fallback** - Works even if database is unavailable
+- **Medium Stats Card** - Dedicated card for Medium platform statistics
+
+## Setup
+
+### 1. Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# GitHub API Token
+PAT_1=your_github_personal_access_token
+
+# Supabase Database Configuration
+SUPABASE_HOST=your-supabase-host
+SUPABASE_DB=your-database-name
+SUPABASE_USER=your-username
+SUPABASE_PASSWORD=your-password
+SUPABASE_PORT=5432
+SUPABASE_SSL=true
+
+# Repository Configuration (optional - only needed for filtering)
+REPOS_YAML_PATH=/path/to/your/repos.yaml
+
+# Database Queries (optional - for security customization)
+# Default behavior: sums all repositories in the database
+GITHUB_TRAFFIC_QUERY="SELECT SUM(total_views) AS total_views, SUM(total_clones) AS total_clones, COUNT(DISTINCT repo_name) AS repos_tracked FROM github_traffic"
+MEDIUM_METRICS_QUERY="SELECT total_views, total_reads FROM medium_metrics ORDER BY timestamp DESC LIMIT 1"
+```
+
+### 2. Repository Configuration (Optional)
+
+**Default Behavior**: The application will sum all views and clones from all repositories in your database.
+
+**Custom Filtering**: If you want to filter specific repositories, you can:
+
+1. **Use Environment Variable**: Set a custom query in `GITHUB_TRAFFIC_QUERY`
+2. **Create repos.yaml**: Specify which repositories to include
+
+```yaml
+repos:
+  - owner: "your-username"
+    repo: "repository-name"
+  - owner: "your-username"
+    repo: "another-repo"
+```
+
+### 3. Database Schema
+
+Ensure your Supabase database has the required tables:
+
+**GitHub Traffic Table:**
+```sql
+CREATE TABLE github_traffic (
+  id SERIAL PRIMARY KEY,
+  repo_name TEXT NOT NULL,
+  total_views INTEGER DEFAULT 0,
+  total_clones INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**Medium Metrics Table:**
+```sql
+CREATE TABLE medium_metrics (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMPTZ DEFAULT NOW(),
+  total_views INTEGER DEFAULT 0,
+  total_reads INTEGER DEFAULT 0,
+  total_earning NUMERIC DEFAULT 0
+);
+```
+
+## Usage
+
+The database stats will automatically appear in your GitHub stats card:
+
+```md
+![Your GitHub stats](http://localhost:9000/?username=your-username)
+```
+
+**Additional stats displayed:**
+- Total Views (from database)
+- Total Clones (from database)
+
+### Medium Stats Card
+
+Access your Medium statistics with a dedicated card:
+
+```md
+![Medium Stats](http://localhost:9000/medium)
+```
+
+**Stats displayed:**
+- Total Views (from Medium)
+- Total Reads (from Medium)
+
+## Security Features
+
+### 🔒 Query Security
+
+The application implements multiple security layers for database queries:
+
+1. **Parameterized Queries**: All queries use PostgreSQL parameterized queries to prevent SQL injection
+2. **Input Validation**: Repository names are validated against a strict pattern (`owner/repo` format)
+3. **Query Templates**: Default secure query templates with built-in validation
+4. **Environment Override**: Custom queries can be provided via environment variables for advanced use cases
+
+### 🛡️ Security Best Practices
+
+- **Repository Validation**: Only allows valid GitHub repository names (alphanumeric, dots, underscores, hyphens)
+- **Query Isolation**: Each query type has its own template and validation
+- **Error Handling**: Graceful error handling without exposing sensitive information
+- **Environment Variables**: Sensitive data stored in environment variables, not in code
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start the server
+node express.js
+
+# Visit your stats card
+open http://localhost:9000/?username=your-username
+
+# Check server health
+curl http://localhost:9000/health
+```
+
+## Rate Limiting
+
+The API includes rate limiting to prevent abuse and protect GitHub API quotas:
+
+- **Limit**: 10 requests per minute per IP address
+- **Window**: 1 minute sliding window
+- **Headers**: Rate limit information included in response headers
+- **Health Check**: `/health` endpoint available for monitoring (not rate limited)
+
+When rate limit is exceeded, the API returns:
+```json
+{
+  "error": "Too many requests from this IP, please try again later.",
+  "retryAfter": "60 seconds"
+}
+```
 
 # Deploy on your own
 
@@ -808,14 +1004,166 @@ Since the GitHub API only allows 5k requests per hour, my `https://github-readme
 3.  Run `npm i` if needed (initial setup)
 4.  Run `node express.js` to start the server, or set the entry point to `express.js` in `package.json` if you're deploying on a managed service
     <https://github.com/anuraghazra/github-readme-stats/blob/ba7c2f8b55eac8452e479c8bd38b044d204d0424/package.json#L11>
-5.  You're done 🎉
+5.  You're done ��
     </details>
+
+## With PM2 (Production Deployment)
+
+For production deployment with process management, monitoring, and auto-restart capabilities:
+
+### 1. Install PM2
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Or install locally
+npm install --save-dev pm2
+```
+
+### 2. Create PM2 Configuration
+
+Create `ecosystem.config.cjs` in your project root:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'github-readme-stats',
+    script: 'express.js',
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'production',
+      port: 9000
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      port: 9000
+    }
+  }]
+};
+```
+
+### 3. Start with PM2
+
+```bash
+# Start the application
+pm2 start ecosystem.config.cjs
+
+# Or start directly
+pm2 start express.js --name "github-readme-stats"
+
+# Start in production mode
+pm2 start ecosystem.config.cjs --env production
+```
+
+### 4. PM2 Management Commands
+
+```bash
+# View running processes
+pm2 list
+
+# Monitor processes
+pm2 monit
+
+# View logs
+pm2 logs github-readme-stats
+
+# Restart application
+pm2 restart github-readme-stats
+
+# Stop application
+pm2 stop github-readme-stats
+
+# Delete application from PM2
+pm2 delete github-readme-stats
+
+# Save PM2 configuration
+pm2 save
+
+# Setup PM2 to start on system boot
+pm2 startup
+```
+
+### 5. Environment Variables with PM2
+
+You can set environment variables in the ecosystem config:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'github-readme-stats',
+    script: 'express.js',
+    env: {
+      NODE_ENV: 'production',
+      port: 9000,
+      PAT_1: 'your-github-token',
+      SUPABASE_HOST: 'your-supabase-host',
+      SUPABASE_DB: 'your-database-name',
+      SUPABASE_USER: 'your-username',
+      SUPABASE_PASSWORD: 'your-password',
+      SUPABASE_PORT: 5432,
+      SUPABASE_SSL: 'true',
+      REPOS_YAML_PATH: '/path/to/repos.yaml'
+    }
+  }]
+};
+```
+
+### 6. Reverse Proxy Setup (Optional)
+
+For production, you might want to use Nginx as a reverse proxy:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+## Cache Control
+
+GitHub Readme Stats supports cache control to optimize performance and data freshness:
+
+### Cache Parameters
+
+- **`cache_seconds`**: Sets the cache header manually (min: 21600, max: 86400). Default is 21600 seconds (6 hours).
+- **`cache=clear`**: Bypasses cache completely and fetches fresh data. Useful when you need immediate updates.
+
+### Examples
+
+```bash
+# Normal request with default cache (6 hours)
+https://github-readme-stats.vercel.app/api?username=anuraghazra
+
+# Request with custom cache duration (12 hours)
+https://github-readme-stats.vercel.app/api?username=anuraghazra&cache_seconds=43200
+
+# Request with cache bypass (fresh data)
+https://github-readme-stats.vercel.app/api?username=anuraghazra&cache=clear
+```
+
+### Environment Variables
+
+*   `CACHE_SECONDS`: This environment variable takes precedence over our cache minimum and maximum values and can circumvent these values for self-hosted Vercel instances.
 
 ## Disable rate limit protections
 
 Github Readme Stats contains several Vercel environment variables that can be used to remove the rate limit protections:
-
-*   `CACHE_SECONDS`: This environment variable takes precedence over our cache minimum and maximum values and can circumvent these values for self-hosted Vercel instances.
 
 See [the Vercel documentation](https://vercel.com/docs/concepts/projects/environment-variables) on adding these environment variables to your Vercel instance.
 

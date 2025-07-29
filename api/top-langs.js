@@ -69,18 +69,25 @@ export default async (req, res) => {
       count_weight,
     );
 
-    let cacheSeconds = parseInt(
-      cache_seconds || CONSTANTS.TOP_LANGS_CACHE_SECONDS,
-      10,
-    );
-    cacheSeconds = process.env.CACHE_SECONDS
-      ? parseInt(process.env.CACHE_SECONDS, 10) || cacheSeconds
-      : cacheSeconds;
+    // Handle cache=clear parameter
+    if (req.query.cache === "clear") {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    } else {
+      let cacheSeconds = parseInt(
+        cache_seconds || CONSTANTS.TOP_LANGS_CACHE_SECONDS,
+        10,
+      );
+      cacheSeconds = process.env.CACHE_SECONDS
+        ? parseInt(process.env.CACHE_SECONDS, 10) || cacheSeconds
+        : cacheSeconds;
 
-    res.setHeader(
-      "Cache-Control",
-      `max-age=${cacheSeconds / 2}, s-maxage=${cacheSeconds}`,
-    );
+      res.setHeader(
+        "Cache-Control",
+        `max-age=${cacheSeconds / 2}, s-maxage=${cacheSeconds}`,
+      );
+    }
 
     return res.send(
       renderTopLanguages(topLangs, {

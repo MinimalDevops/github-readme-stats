@@ -213,6 +213,8 @@ const renderStatsCard = (stats, options = {}) => {
     totalDiscussionsAnswered,
     contributedTo,
     rank,
+    totalViews,
+    totalClones,
   } = stats;
   const {
     hide = [],
@@ -344,6 +346,25 @@ const renderStatsCard = (stats, options = {}) => {
     value: contributedTo,
     id: "contribs",
   };
+
+  // Add database stats if available
+  if (totalViews !== undefined && totalViews > 0) {
+    STATS.views = {
+      icon: icons.star, // Using star icon as placeholder, you can create a custom view icon
+      label: "Total Views",
+      value: totalViews,
+      id: "views",
+    };
+  }
+
+  if (totalClones !== undefined && totalClones > 0) {
+    STATS.clones = {
+      icon: icons.contribs, // Using contribs icon as placeholder, you can create a custom clone icon
+      label: "Total Clones",
+      value: totalClones,
+      id: "clones",
+    };
+  }
 
   const longLocales = [
     "cn",
