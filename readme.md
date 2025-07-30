@@ -499,10 +499,49 @@ Use [show\_owner](#gist-card-exclusive-options) query option to include the gist
 
 # Medium Stats Card
 
-The Medium Stats card shows your Medium platform statistics including total views and total reads from your Supabase database.
+The Medium Stats card shows your Medium platform statistics including total views and total reads from your database.
 
-> [!NOTE]\
-> This card requires a Supabase database with a `medium_metrics` table containing `total_views` and `total_reads` columns.
+## Prerequisites
+
+**⚠️ Important**: To use the Medium stats card, you need:
+
+1. **Public Database Access**: Your Medium metrics must be stored in a **publicly accessible database** (like Supabase, Railway, or similar)
+2. **Environment Variables**: Database credentials must be configured via `.env` file
+3. **Database Schema**: Your database must have a `medium_metrics` table with the required structure
+
+### Database Setup
+
+#### Required Table Structure
+```sql
+CREATE TABLE medium_metrics (
+  id SERIAL PRIMARY KEY,
+  total_views INTEGER NOT NULL,
+  total_reads INTEGER NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Sample Data
+```sql
+INSERT INTO medium_metrics (total_views, total_reads) VALUES (15000, 8500);
+```
+
+### Environment Configuration
+
+You **must** configure these environment variables in your `.env` file:
+
+```bash
+# Database Configuration (Required)
+SUPABASE_HOST=your-database-host
+SUPABASE_DB=your-database-name
+SUPABASE_USER=your-username
+SUPABASE_PASSWORD=your-password
+SUPABASE_PORT=5432
+SUPABASE_SSL=true
+
+# Optional: Custom query override
+MEDIUM_METRICS_QUERY="SELECT total_views, total_reads FROM medium_metrics ORDER BY timestamp DESC LIMIT 1"
+```
 
 ### Usage
 
@@ -798,6 +837,8 @@ By default, GitHub does not lay out the cards side by side. To do that, you can 
 
 This fork includes **custom database integration** for displaying additional repository traffic statistics from your Supabase PostgreSQL database.
 
+**⚠️ Important**: This feature requires a **publicly accessible database** (like Supabase, Railway, or similar) that your application can connect to from the deployment environment.
+
 ## Features
 
 - **Total Views** - Shows total repository views from your database (sum of all repositories)
@@ -808,6 +849,14 @@ This fork includes **custom database integration** for displaying additional rep
 - **Medium Stats Card** - Dedicated card for Medium platform statistics
 
 ## Setup
+
+### 0. Database Requirements
+
+Before setting up the environment variables, ensure you have:
+
+1. **Public Database**: A publicly accessible PostgreSQL database (Supabase, Railway, etc.)
+2. **Required Tables**: The `github_traffic` and/or `medium_metrics` tables created
+3. **Network Access**: Your deployment environment can connect to your database
 
 ### 1. Environment Variables
 
@@ -892,6 +941,33 @@ The database stats will automatically appear in your GitHub stats card:
 ### Medium Stats Card
 
 Access your Medium statistics with a dedicated card:
+
+## Troubleshooting
+
+### Common Database Issues
+
+**❌ "Could not fetch database stats"**
+- Check if your database is publicly accessible
+- Verify environment variables are correctly set
+- Ensure database tables exist with correct schema
+- Check network connectivity from deployment environment
+
+**❌ "PostgreSQL client not available"**
+- Install the `pg` package: `npm install pg`
+- Ensure database credentials are correct
+- Verify SSL settings match your database configuration
+
+**❌ "Invalid repository names"**
+- Check your `repos.yaml` file format (if using filtering)
+- Ensure repository names follow `owner/repo` format
+- Verify the file path in `REPOS_YAML_PATH` environment variable
+
+### Database Connection Tips
+
+1. **Supabase**: Enable "Allow connections from any IP" in database settings
+2. **Railway**: Use the provided connection string format
+3. **Local Development**: Use `localhost` or `127.0.0.1` for local database
+4. **SSL**: Set `SUPABASE_SSL=true` for cloud databases, `false` for local
 
 ```md
 ![Medium Stats](http://localhost:9000/medium)
